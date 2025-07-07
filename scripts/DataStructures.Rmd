@@ -1,0 +1,157 @@
+---
+title: "Data Structures"
+author: "Naomi Loughiln"
+date: "2025-05-14"
+output: html_document
+---
+# Data Structures 
+
+## Load Libraries 
+```{r}
+library(dplyr)
+```
+
+## Load Dataset 
+
+```{r}
+load("../data/timeuse_day2.RData") # load data set with renamed column 
+
+head(js_data) # check data loaded correctly
+```
+
+## Check Data Types
+
+```{r}
+sapply(js_data, class)
+```
+
+
+Some of the variables are numeric but it doesn't quite make sense. For example, the provinces are numeric, but really each number corresponds to a specific province name, so these should be factors. These factor variables can be strings and will be more intuitive to understand which province is which. We can change these numeric value to factors using the recode_factor function and a dictionary. 
+
+### Change Province Data Type 
+
+```{r}
+js_data <- js_data |> 
+  mutate(province_fact = recode_factor(province, 
+                            "10" = "NL", 
+                            "11" = "PEI", 
+                            "12" = "NS",
+                            "13" = "NB", 
+                            "24" = "QC", 
+                            "35" = "ON", 
+                            "46" = "MB", 
+                            "47" = "SK", 
+                            "48" = "AB", 
+                            "59" = "BC"))
+
+head(js_data) # Check new column province_fact exists 
+
+class(js_data$province_fact) # Check class of province_fact is factor 
+```
+
+### Alternative method of checking class/data type using is.factor or is.numeric which outputs a boolean response 
+
+```{r}
+print(paste("Is of data class factor?", is.factor(js_data$province_fact)))
+
+print(paste("Is of data class numeric?", is.numeric(js_data$province_fact)))
+
+```
+
+## Missing Data 
+
+```{r, echo = TRUE}
+mean(js_data$eduLevel)
+```
+
+We get "NA" as the output because the default setting in the mean function is not to calculate the mean if missing values are present (na.rm = FALSE). We can change this and try again. 
+
+```{r}
+mean(js_data$eduLevel, na.rm = TRUE)
+```
+
+We can check the number of cells with missing values (NAs) using the is.na function. This function on its own will return Boolean values for each cell indicating whether it is (TRUE) or is not (FALSE) a missing value (NA). More usefully, we can sum these to get the total number of missing values in a data frame or within a specific variable.  
+
+```{r, echo = TRUE}
+sum(is.na(js_data$eduLevel))
+```
+
+We can also use the complete_cases function which checks for the number of rows without missing values (almost the opposite of the is.na function, but returns number of rows and not number of cells). This also returns Boolean values for each row, so the nesting this function within the sum function, is beneficial (tells us the total number of rows (not cells) without missing data).
+
+```{r}
+sum(complete.cases(js_data))
+```
+
+## Practice Recoding Variables 
+
+### Marital Status
+
+Check variable class
+
+```{r}
+class(js_data$maritalStat)
+```
+
+Let's change this to a factor variable 
+
+```{r}
+js_data <- js_data |>
+  mutate(maritalStat_fact = recode_factor(maritalStat, 
+                            "1" = "Married", 
+                            "2" = "Living common-law", 
+                            "3" = "Widowed",
+                            "4" = "Separated", 
+                            "5" = "Divorced", 
+                            "6" = "Single, never married"))
+```
+
+Check if the new column exists and is a factor 
+
+```{r}
+head(js_data)
+class(js_data$maritalStat_fact)
+```
+
+### Education Level 
+
+Go through the same steps as above, but with the education level variable. 
+
+```{r}
+class(js_data$eduLevel)
+
+js_data <- js_data |>
+  mutate(eduLevel_fact = recode_factor(eduLevel,
+                                       "1" = "Less than high school dimploma or its equivalent",
+                            "2" = "High school diploma or equivalency",
+                            "3" = "Trade certificate or diploma",
+                            "4" = "College, CEGEP, or other non-university certificate or dimploma",
+                            "5" = "University certificate or dimploma below the bachelor's level",
+                            "6" = "Bachelor's degree",
+                            "7" = "University certificate, diploma, degree above the BA level"))
+
+print(class(js_data$eduLevel_fact))
+
+```
+
+
+## Data format 
+
+Check that our data is in a data frame format using the is.data.frame() function (similar to the is.numeric() and is.factor() functions).The output is a Boolean (true/false) value. 
+
+```{r}
+is.data.frame(js_data)
+```
+
+```{r}
+head(js_data)
+```
+
+## Save Our work!
+
+Remember to also upload to OSF.
+
+```{r}
+save(js_data, file="../data/timeuse_day3_1.RData")
+write_csv(js_data, file="../data/timeuse_day3_1.csv")
+```
+

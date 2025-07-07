@@ -1,0 +1,97 @@
+---
+title: "Jumpstart Practice Script"
+author: "Naomi Loughiln"
+date: "2025-05-14"
+output: html_document
+---
+```{r load-libraries, eval = FALSE}
+## Initialize renv
+renv::init() # for reproducible environment 
+```
+
+# Learning RDM with Time Use Project 
+
+Here we will get familiar with using R and get our dataset ready for analysis! 
+
+## My First Chunk of Code 
+
+```{r cars}
+5+3
+```
+
+## Import Our data 
+
+### Load Libraries 
+```{r}
+library(tidyverse)
+```
+
+### Read .csv file 
+
+```{r}
+js_data <- read_csv("../data/timeuse_day1_na.csv")
+
+```
+
+### Listing Column Names 
+```{r}
+names(js_data)
+```
+
+### Head Function
+
+```{r}
+head(js_data)
+```
+
+### Viewing Data 
+
+```{r}
+view(js_data) # Opens the data in a new tab 
+```
+
+### Changing Column Names 
+
+```{r}
+js_data <- js_data |>
+  rename ("ageGrp" = "AGEGR10",
+          "sex" = "SEX",
+          "maritalStat" = "MARSTAT",
+          "province" =  "PRV",
+          "popCenter" = "LUC_RST",
+          "eduLevel" = "EHG_ALL",
+          "feelRushed" = "GTU_110",
+          "extraTime" = "GTU_130",
+          "durSleep" = "DUR01",
+          "durMealPrep" = "DUR05",
+          "durEating" = "DUR06",
+          "durAlone" = "DURS200",
+          "durDriving" = "DURL313",
+          "durWork" = "DUR08",
+          "durShoolSite" = "DUR13",
+          "durSchoolOnline" = "DUR14",
+          "durStudy" = "DUR15",
+          "mainStudy" = "MRW_20",
+          "mainJobHunting" = "MRW_30",
+          "mainWork" = "MRW_40",
+          "worked12m" = "MRW_D40A",
+          "workedWeek" = "MRW_D40B",
+          "enrollStat" = "EDM_02",
+          "dailyTexts" = "TST_01",
+          "timeSlowDown" = "TCS_110",
+          "timeWorkaholic" = "TCS_120",
+          "timeNotFamFriends" = "TCS_150",
+          "timeWantAlone" = "TCS_200")
+```
+
+Check to make sure successful column name changes 
+
+```{r}
+names(js_data)
+```
+## Save Our work!
+
+```{r}
+save(js_data, file="../data/timeuse_day2.RData")
+write_csv(js_data, file="../data/timeuse_day2.csv")
+```

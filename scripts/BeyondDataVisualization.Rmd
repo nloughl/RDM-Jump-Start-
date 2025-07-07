@@ -1,0 +1,186 @@
+---
+title: "BeyondDataVisualization"
+author: "Naomi Loughiln"
+date: "'r Sys.Date()'"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE 
+      collapsed: FALSE 
+---
+
+# Extra R Tricks 
+
+Here we have set up an R markdown and added a table of contents in the knitted output using the toc option for the rmd output. 
+
+We will also improve rmd organization including adding code chunk names and other options. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Packages
+
+```{r packages, echo = FALSE, results = 'hide', eval = FALSE}
+# List required packages and install them if needed 
+packageList <- c("here",
+                 "dplyr",
+                 "readr",
+                 "osfr")
+
+install.packages(setdiff(packageList, rownames(installed.packages())), repos = "http:/cran.us.r-project.org")
+```
+
+Setdiff will compare the package list with those already installed on the user's system (provided by the installed.packages() function). 
+
+```{r}
+packageList <- c("here", 
+                 "dplyr", 
+                 "readr", 
+                 "osfr")
+
+# Find missing packages
+missing_packages <- setdiff(packageList, rownames(installed.packages()))
+
+# Inform and prompt user
+if (length(missing_packages) > 0) {
+  cat("The following packages are not installed:\n")
+  print(missing_packages)
+  
+  answer <- tolower(readline("Do you want to install them now? [y/n]: "))
+  
+  if (answer %in% c("y", "yes")) {
+    install.packages(missing_packages, repos = "http://cran.us.r-project.org")
+  } else {
+    cat("Installation cancelled by user.\n")
+  }
+} else {
+  cat("All packages are already installed.\n")
+}
+
+```
+
+
+We can also print the setdiff results so we now which packages we don't have installed. Then we can use readline() to get input from the user about whether they want to install them. 
+
+We can also use sessionInfo() to check our locale and change it if needed. 
+
+## Libraries 
+
+```{r libraries}
+# Load libraries 
+library(here)
+library(dplyr)
+library(readr)
+library(osfr)
+```
+
+You can also use the renv:: way of installing libraries. This will only load specific packages within a library, rather than loading the entire package. 
+
+## Here
+
+```{r here}
+# Use the hear package with readlines to open 
+# js_TimeUSe_Dictionary.md
+# print it to consol
+# edit it 
+js_data_dictionary <- readLines(here("docs", "js_TimeUse_Dictionary.md"))
+# print(js_data_dictionary)
+js_data_dictionary[450] <- "|1|yes|"
+# writeLines(js_data_dictionary, "../docs/js_TimeUse_Dictionary.md")
+writeLines(js_data_dictionary, here("docs", "js_TimeUse_Dictionary.md"))
+```
+
+Instead of writing out the path to the file we want to read in (e.g. ../docs/"filename"), we use the here() function. 
+
+## Bulk Data Read
+
+```{r}
+# first create a couple of similarity structured data 
+# sets
+df_1 <- data.frame(
+  x = rnorm(50),
+  y = runif(50)
+)
+
+df_2 <- data.frame(
+  x = rnorm(50),
+  y = runif(50)
+)
+
+# save them
+readr::write_csv(df_1,  here("data", "data_sample", "df_1.csv"))
+readr::write_csv(df_2, here("data", "data_sample", "df_2.csv"))
+
+# read them in with apply
+all_dfs <- lapply(list.files(here("data", "data_sample")), function(x) read_csv(here("data", x)))
+
+# 'merge' with do.call
+do.call(rbind, all_dfs)
+
+```
+
+Yesterday we used sapply() (simple) which returns a vector, here we use lappply() which returns a list.
+
+Using do.call() simplifies the application of rbind to many datasets. If you tried to use lappy with rbind, it would struggle to understand how to apply the function and would require you to list out all the dataframes you want to bind. The do.call() function simplifies this and applies it to all dataframes in the list provided (could be many more data frames than the 2 we created). 
+
+Rbind is used rather than merge(). Merge() binds data frames based on a shared column. Rbind() merges the data frames with more similar structures, and combines them by columns or rows. 
+
+```{r osf}
+# set up authentication tokens
+library(osfr)
+
+# get project information
+jumpstart_project <- osf_retrieve_node("https://osf.io/tk9hn/")
+
+# view files in the project
+js_files <- osf_ls_files(jumpstart_project)
+js_files
+
+# download a file using OSF link 
+
+js_metadata <- osf_retrieve_file("https://osf.io/r6b9x") # ;ink to specific file from OSF 
+js_data <- osf_download(js_data, conflicts = "overwrite")
+file_path <- js_data$local_path
+js_data <- read.csv(file_path)
+
+# download a file using the project files metadata 
+
+readmeFile <- js_files$meta[[6]]$attributes$guid
+readmeFile
+osf_retrieve_file(readmeFile) |>
+  osf_download(conflicts = "overwrite")
+
+# another method of navigating the project and downloading a file 
+js_file_metadata <- osf_ls_files(osf_retrieve_node("tk9hn")) |>
+  filter(name == "docs") |>
+  osf_ls_files() |>
+  filter(name == "js_TimeUse_Dictionary.md") |>
+  osf_download(path = ".", conflicts = "overwrite")
+file_path <- js_file_metadata$local_path
+js_dd <- readLines(file_path)
+
+# edit the file 
+js_dd <- c(js_dd, "I edited this document!")
+writeLines(js_dd, file_path)
+
+# upload file 
+osf_upload(jumpstart_project,
+           "README.md",
+           conflicts = "overwrite")
+
+```
+
+In the terminal we ran: 
+$HOME 
+~
+ls -a ~/ | grep ".Renviron"
+echo OSF_PAT= >> ~/.Renviron
+cat ~/.Renviron
+
+
+You can get your OSF token by logging into your OSF account -> settings -> "personal access tokens" . 
+
+To download a file from your OSF project, you can either get the specific link to the file from your OSF profile, or since your already retrieved the project node, you can navigate through the folders to the specific file you want to download. The meta column of js_files is teh metadata associated with each file, which is used to identify the unique file id of the file we want to download (same as the 5 digit code in the speicifc file link from oSF). 
+
+

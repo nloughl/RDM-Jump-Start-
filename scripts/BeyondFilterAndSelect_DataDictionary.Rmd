@@ -1,0 +1,126 @@
+---
+title: "Beyond Filter and Select: Data Dictionary"
+author: "Naomi Loughiln"
+date: "2025-05-14"
+output: html_document
+---
+
+# Beyond Filter and Select: Data Dictionaries 
+
+Here we will create a data dictionary for the "Palmer Penguins" data set (a smaller dataset than the JumpStart dataset). The same concepts can be applied to the Jumpstart dataset.  
+
+```{r setup, include=FALSE}
+# install.packages("palmerpenguins")
+``` 
+
+# Creating a data dictionary for the penguins data set 
+
+We would want to include  variable names, brief description, data type, labels, number of records or number of nas, ranges 
+
+## Data
+```{r}
+penguins_data <- palmerpenguins::penguins
+```
+
+## Variable Names
+```{r}
+varNames <- names(penguins_data) 
+```
+
+## Data Types
+
+Class reports on data structure (numeric, factor, etc.), typeof reports on the individual values (type or storage mode) of each object (e.g. double, integer, character).
+
+```{r}
+dataClass <- sapply(penguins_data, class) # apply outputs a list, whereas sapply outputs a simplified verion of a vector
+view(as.data.frame(dataClass)) # verify our output 
+
+dataType <- sapply(penguins_data, typeof)
+view(as.data.frame(dataType))
+
+```
+
+## Missing Data
+```{r}
+observationsWithValues <- sapply(penguins_data, function(x) sum(!is.na(x)))
+```
+
+When using a nested function like is.na() within sum(), it can get confusing. We need to specify what we want apply is.na() on, so we make a temporary function using an 'x' as the variable to clarify the input to the nested function. 
+
+## Data Range
+```{r}
+dataRanges <- sapply(1:length(penguins_data), function(x) ifelse(
+  class(penguins_data[[x]]) == "factor",
+  paste0(levels(penguins_data[[x]]), collapse = ", "),
+  paste0(range(penguins_data[[x]], na.rm = TRUE), collapse = ", ")
+))
+
+view(dataRanges)
+```
+
+Using double square brackets [[]] extracts the actual value.The levels and range functions return a vector of multiple values (min and max), so we 
+
+Paste or paste0 can be used. Paste, pastes (concatenates) multiple things together. Paste inlcudes a space between concatenated objects, paste0 does not include a space between objects. Here we added the 'collapse' agrument to insert a ", " between object. the list() function works similarly. 
+
+## Combine into Data dictionary 
+
+```{r}
+penguins_dd <- data.frame(
+  varNames,
+  dataClass,
+  dataType,
+  observationsWithValues,
+  dataRanges
+)
+
+view(penguins_dd)
+```
+
+The functions we created for each variable could be included within the penguins_dd creation. That way it can all be run at once. See below. 
+
+```{r}
+penguins_dd <-
+data.frame(
+  varNames,
+  dataClass,
+  dataType,
+  observationsWithValues,
+  dataRanges
+)
+```
+
+# Generalization 
+
+We want our code to be usable by others. So we can make it into a function so other data sets can be used. We will also include some error checking to make sure the correct input is given. 
+
+```{r}
+datadictionary_fn <- function(dataset){
+  # test if its a data frame and stop if it's not 
+  if(!"data.frame" %in% class(dataset)){
+    stop("This is not a data frame.")
+  }
+  return(
+    data.frame(
+  varNames = names(dataset),
+  dataClass = unname(sapply(dataset, class)),
+  dataType = unname(sapply(dataset, typeof)),
+  observationsWithValues = unname(sapply(dataset, function(x) sum(!is.na(x)))),
+  dataRanges = sapply(1:length(dataset), function(x) ifelse(
+  class(dataset[[x]]) == "factor",
+  paste0(levels(dataset[[x]]), collapse = ", "),
+  paste0(range(dataset[[x]], na.rm = TRUE), collapse = ", ")
+))
+)
+  )
+}
+
+penguins_dd <- datadictionary_fn(penguins_data)
+```
+
+Test with a non-data frame dataset 
+
+```{r}
+test_var <- c(1:5)
+test_dd <- datadictionary_fn(test_var)
+```
+

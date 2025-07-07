@@ -1,0 +1,233 @@
+---
+title: "Filter And Select"
+author: "Naomi Loughiln"
+date: "2025-05-14"
+output: html_document
+---
+# Filter and Select
+
+## Setup and Load the Dataset 
+
+```{r setup, include=FALSE}
+library(dplyr)
+js_data_path <- "data/timeuse_day3_1.Rdata"
+
+load(js_data_path)
+```
+
+## Filtering 
+
+Filter for distinct/unique values in the feelRushed column to see what categories exist. 
+
+```{r}
+js_data |> 
+  distinct(feelRushed)
+``` 
+
+We can also look at distributions using the count() and arrange() functions.
+
+```{r}
+# Sleep Duration distribution 
+js_data |> 
+  count(durSleep) |> 
+  arrange(desc(n)) |> 
+  head(10) 
+```
+
+
+```{r}
+# Work Duration Distriburion
+js_data |> 
+  count(durWork) |> 
+  arrange(desc(n)) |> 
+  head(10)
+```
+
+## Basic Filtering 
+
+Filter the feelRushed column for those who responded with feelin rushed daily (which corresponds to a value of 1). This shows all of the subjects who feel rushed daily. 
+
+```{r}
+js_data |> 
+  filter(feelRushed == 1) |> 
+  head()
+```
+
+
+We can also use logical operators to filter for certain values. 
+
+```{r}
+# Filter for sleep duration less than 600
+js_data |> 
+  filter(durSleep < 600) |>
+  head()
+```
+
+```{r}
+# Filter for sleep duration between 600 and 1000
+js_data |> 
+  filter(durSleep >= 600 & durSleep <= 1000) |>
+  head()
+```
+
+
+## Complex Filtering 
+
+
+Using range comparison (greater or equal). 
+
+```{r}
+js_data |> 
+  filter(feelRushed <= 3) |>
+  head()
+```
+
+We can use the "&" to specify multiple conditions. 
+
+```{r}
+js_data |> 
+  filter(feelRushed > 3 & feelRushed <= 6) |>
+  head()
+```
+
+Calculate how many rows remain after filtering 
+
+`js_data |> 
+  filter(feelRushed > 3 & feelRushed <= 6) |>
+  head()
+  
+```{r}
+all_rows <- js_data |> 
+  nrow()
+rushed_rows <- js_data |> 
+  filter(feelRushed <= 3) |>
+  nrow()
+not_rushed_rows <- js_data |> 
+  filter(feelRushed > 3 & feelRushed <= 6) |>
+  nrow()
+
+print(paste("The number of rows in data is:", all_rows))
+
+print(paste("The number of rows in rushed is:", rushed_rows))
+
+print(paste("The number of rows in not rushed is:", not_rushed_rows))
+```
+
+Chain Multiple Conditions using the pipe operator 
+
+```{r}
+js_data |> 
+  filter(feelRushed == 1 | feelRushed == 2 | feelRushed == 3) |> 
+  head()
+```
+
+
+Calculate how many rows remain after filtering 
+
+```{r}
+rushed_rows <- js_data |> 
+  filter(feelRushed == 1 | feelRushed == 2 | feelRushed == 3) |>
+  nrow()
+not_rushed_rows <- js_data |> 
+  filter(feelRushed == 4 | feelRushed == 5 | feelRushed == 6) |>
+  nrow()
+
+print(paste("The number of rows in rushed is:", rushed_rows))
+
+print(paste("The number of rows in not rushed is:", not_rushed_rows))
+```
+
+## Select Relevant Variables 
+
+We’ll select only these three columns from our rushed and not_rushed datasets using select().
+
+```{r}
+rushed_time <- js_data |> 
+  filter(feelRushed <= 3) |>
+  select(durWork, durSleep, durAlone) 
+
+not_rushed_time <- js_data |> 
+  filter(feelRushed > 3) |> 
+  select(durWork, durSleep, durAlone)
+
+
+rushed_time |> 
+  head()
+
+not_rushed_time |> 
+  head()
+```
+
+
+## Compare Time Use 
+
+
+```{r}
+mean_rushed <- rushed_time |> 
+  summarise(
+    durSleep = mean(durSleep, na.rm = TRUE),
+    durAlone = mean(durAlone, na.rm = TRUE),
+    durWork = mean(durWork, na.rm = TRUE)
+  )
+
+mean_not_rushed <- not_rushed_time |> 
+  summarise(
+    durSleep = mean(durSleep, na.rm = TRUE),
+    durAlone = mean(durAlone, na.rm = TRUE),
+    durWork = mean(durWork, na.rm = TRUE)
+  )
+```
+
+We can do the same thing mmore efficiently, in less lines of code: 
+
+```{r}
+# Calculate the mean values for each variable using summarise and across
+mean_rushed <- rushed_time |> 
+  summarise(across(everything(), ~ mean(. , na.rm = TRUE)))
+
+mean_not_rushed <- not_rushed_time |> 
+  summarise(across(everything(), ~ mean(. , na.rm = TRUE)))
+```
+
+We calculate the difference in means between these two groups.The subtraction (mean_rushed - mean_not_rushed) gives a new one‐row tibble showing how much more (or less) time “rushed” individuals spend on each activity compared to “not rushed” individuals.
+
+```{r}
+diff_means <- mean_rushed - mean_not_rushed
+```
+
+## Recode and Save
+
+```{r}
+js_data |>
+  count(popCenter)
+```
+
+We can use dplyr’s mutate() along with if_else() to turn those numbers into descriptive labels:
+
+```{r}
+
+js_data <- js_data |> mutate(
+  popCenter=if_else(popCenter==1,'urban',
+                    if_else(popCenter==2,'rural','PEI'))
+)
+```
+
+Next, we’ll create a new flag called isFeelRushed to mark whether each respondent feels rushed or not. This will be useful for our upcoming data-visualization tutorial:
+
+```{r}
+js_data <- js_data |> mutate(
+  isFeelRushed=if_else(feelRushed <= 3,1,0)
+)
+
+```
+
+### SaVE
+
+```{r}
+save(js_data, file = "../data/time_use_day3_2.RData")
+
+```
+
+
+
+

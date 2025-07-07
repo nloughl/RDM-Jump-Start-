@@ -1,0 +1,195 @@
+---
+title: "Data Visualization in R"
+author: "Naomi Loughiln"
+date: "2025-05-15"
+output: html_document
+---
+
+# Load Data set 
+
+```{r}
+load("../data/time_use_day3_2.RData") # load data set with renamed column 
+
+head(js_data) # check data loaded correctly
+```
+# Load Libraries 
+
+```{r}
+library(ggplot2)
+```
+
+# Basic Bar Plot
+
+## Counts 
+
+We want to make a bar plot showing the number of people in each group in the isFeelRushed variable. 
+
+To 'tell' ggplot what variable we want to plot, we put it in the aes() function.
+
+To specify the type of visualization (i.e. bar plot), we use geom_bar(). Remember to connect layers of ggplot inputs with "+".  
+
+```{r}
+ggplot(js_data, aes(x = as.factor(isFeelRushed))) +
+  geom_bar(stat = "count")
+```
+
+### Add Labels  
+
+
+```{r}
+ggplot(js_data, aes(x = as.factor(isFeelRushed))) +
+  geom_bar(stat = "count") + 
+  xlab("Feeling Rushed") +
+  ylab ("Number of Participants") 
+```
+
+## Group Means 
+
+```{r}
+ggplot(js_data, aes(x = as.factor(isFeelRushed), y = durWork)) +
+  geom_bar(stat = "summary") + 
+  xlab("Feeling Rushed") +
+  ylab ("Average Minutes Working") 
+```
+
+
+# Improved Plots 
+
+```{r}
+plotlabels <- c("Not Rushed", "Rushed", "Did Not Respond")
+
+ggplot(js_data, aes(x = as.factor(isFeelRushed), y = durWork)) +
+  geom_bar(stat = "summary", fill = "#2D5E7F") + 
+  xlab("Feeling Rushed") +
+  ylab ("Average Minutes Working") +
+  labs(title = "Working and Feeling Rushed") +
+  scale_x_discrete(labels = plotlabels) +
+  theme(text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = 1))
+```
+
+We can change the color of the bars using fill =. Here we added the specific color using a hex code. But you can also write in the names of colors such as “blue”.
+
+Using labs(title = "") we added an overall title to the plot
+
+We probably want to indicate what each category represents, rather than the “0”, “1” and “NA” labels. To add text labels, we first create an object with each of those labels in order (plotlabels <- c("Not Rushed", "Rushed", "Did Not Respond")). Then in the scale_x_discrete(labels = plotlabels) function we call to that object we created as the labels for the x-axis. There are many other ways to adjust the labels for each axis, but this method works well for a small number of groups.
+
+In the theme() layer you can add many different specifications. Here we added text = element_text(size = 18) to make the text size bigger than the default and made the x-axis labels angled so they fit better using axis.text.x = element_text(angle = 25, hjust = 1). The hjust = adjusts the vertical location of the axis labels so they don’t overlap with the plot itself. vjust = can be used to move the labels right and left.
+
+# Basic Scatter Plot 
+
+Scatter plots can visualize two continuous variables, which can be used to check if it looks like there is correlation between variables. 
+
+```{r}
+ggplot(js_data, aes(durWork, durSleep)) +
+  geom_point() +
+  geom_smooth() +
+  xlab("Minutes Spent Working") +
+  ylab ("Minutes Spent Sleeping")
+```
+
+
+# Improved Scatter Plot 
+
+```{r}
+ggplot(js_data, aes(durWork, durSleep)) +
+  geom_point(color = "#2D5E7F", alpha = .2) +
+  geom_smooth(method = lm, color = "black") +
+  xlab("Minutes Spent Working") +
+  ylab ("Minutes Spent Sleeping") +
+  scale_x_continuous(breaks = seq(0, 1500, 250)) +
+  labs(title = "Association Between Working and Sleeping") +
+  theme(text = element_text(size = 18))
+```
+
+# Practice!
+
+## Plot a categorical variable and one of the duration variables
+
+```{r}
+plotlabels <- c("Married", "Living Common-Law", "Widoewed", "Separated", "Divorced", "Single, Never Married")
+
+ggplot(js_data, aes(maritalStat_fact, durAlone)) +
+  geom_bar(stat = "summary", fill = "pink") +
+  xlab("Marital Status") +
+  ylab ("Minutes Spent Alone") +
+  labs(title = "Marital Status and Time Spent Alone") +
+  scale_x_discrete(labels = plotlabels) +
+  theme(text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = 1))
+```
+
+
+## Plot 2 Continous Variables 
+
+```{r}
+ggplot(js_data, aes(durMealPrep, durEating)) +
+  geom_point(color = "purple", alpha = .2) +
+  geom_smooth(method = lm, color = "black") +
+  xlab("Minutes Spent Preparing Meals") +
+  ylab ("Minutes Spent Eating") +
+  scale_x_continuous(breaks = seq(0, 1500, 250)) +
+  labs(title = "Association Between Meal Preparation Time and Time Eating ") +
+  theme(text = element_text(size = 18))
+```
+
+# Saving your Plots
+
+Plots can be saved to various file formats using ggsave(). See below for an example (this is covered in more detail on Day 4: Saving Output on the Github site)
+
+```{r}
+# create plot 
+p <- ggplot(js_data, aes(durWork, durSleep)) +
+  geom_point(color = "#2D5E7F", alpha = .2) +
+  geom_smooth(method = lm, color = "black") +
+  xlab("Minutes Spent Working") +
+  ylab ("Minutes Spent Sleeping") +
+  scale_x_continuous(breaks = seq(0, 1500, 250)) +
+  labs(title = "Association Between Working and Sleeping") +
+  theme(text = element_text(size = 18))
+
+p
+
+```
+## Save as PNG
+
+Use PNG for web use or powerpoint presentations as it offers high quality and is widely supported. 
+
+```{r}
+ggsave(
+  filename = "../outputs/association_sleep_working_day4.png", 
+  plot = p, 
+  width = 8, 
+  height = 6, 
+  dpi = 300
+  )
+```
+
+## Save as PDF
+
+Use if you want your plots to be re-sizeable without losing quality (pdf preserves vector graphics). Useful for embedding in academic papers. 
+
+```{r}
+ggsave(
+  filename = "../outputs/association_sleep_working_day4.pdf", 
+  plot = p, 
+  width = 8, 
+  height = 6)
+```
+
+## Save as TIFF 
+
+Use for academic journals as some prefer TIFF for its high resolution. 
+ 
+```{r}
+ggsave(
+  filename = "../outputs/association_sleep_working_day4.tiff",
+  plot     = p,
+  width    = 8,
+  height   = 6,
+  dpi      = 600,
+  device   = "tiff"
+)
+```
+
+

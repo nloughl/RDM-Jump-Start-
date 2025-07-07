@@ -1,0 +1,47 @@
+---
+title: "BeyondFilterAndSelect_Directories"
+author: "Naomi Loughiln"
+date: "2025-05-14"
+output: html_document
+---
+
+# Directories and README Files
+
+## Create Directories
+
+Create a list of the directories you (or someone else who wants to reuse your code) will need. 
+
+```{r}
+dirNames <- c("docs", "scripts", "data", "outputs")
+```
+
+
+```{r}
+# Create the directories we need (if they don't already exist)
+for(i in dirNames){
+  # does the directory exist
+  if(!dir.exists(i)){
+    dir.create(i)
+  }
+}
+```
+
+## Create a README file 
+
+```{r}
+for(i in dirNames){
+  # create a readme in each directory 
+  file.create(paste0(i, "/README.md"))
+}
+```
+
+## Add Author and Date to the ReadMe file 
+
+```{r}
+file.create("./readme.md")
+sink("readme.md")
+cat("Author: Naomi Loughlin\n")
+cat(paste0("Created: ", Sys.Date(), "\n"))
+sink()
+```
+

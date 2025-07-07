@@ -1,7 +1,7 @@
 
 Title: RDM Jumpstart Project 
 
-This R porject space was used throughout the RDM jumpstart course offering in May 2025. It contains the data, scripts, and outputs generated throughout the course. The scripts are mainly R-markdown files with the relevant code as well as my personal notes. More information about the course and the project indtructions can be found on the following site: https://alliance-rdm-gdr.github.io/rdm-jumpstart/index.html 
+This R project was used throughout the RDM jumpstart course offering in May 2025. It contains the data, scripts, and outputs generated throughout the course. The scripts are mainly R-markdown files with the relevant code as well as my personal notes. More information about the course and the project indtructions can be found on the following site: https://alliance-rdm-gdr.github.io/rdm-jumpstart/index.html 
 
 The following readme information was generated on 2025-05-08 by Nick Rochlin.
 
